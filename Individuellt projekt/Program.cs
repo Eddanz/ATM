@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Threading;
+using System.Threading.Channels;
 
 namespace Individuellt_projekt
 {// ===== Eddie Halling SUT23 =====
@@ -11,23 +13,33 @@ namespace Individuellt_projekt
         {
             List<BankAccount> AlphaAccounts = new List<BankAccount>
             {
-
+                new BankAccount("Lönekonto", 20157)
             };
             List<BankAccount> BravoAccounts = new List<BankAccount>
             {
-
+                new BankAccount("Lönekonto", 14537),
+                new BankAccount("Sparkonto", 10000),
             };
             List<BankAccount> CharlieAccounts = new List<BankAccount>
             {
-
+                new BankAccount("Lönekonto", 25600),
+                new BankAccount("Sparkonto", 20000),
+                new BankAccount("Matkonto", 3000)
             };
             List<BankAccount> DeltaAccounts = new List<BankAccount>
             {
-
+                new BankAccount("Lönekonto", 32881),
+                new BankAccount("Sparkonto", 30000),
+                new BankAccount("Matkonto", 4000),
+                new BankAccount("Resa", 10000)
             };
             List<BankAccount> EchoAccounts = new List<BankAccount>
             {
-
+                new BankAccount("Lönekonto", 58923),
+                new BankAccount("Sparkonto", 60000),
+                new BankAccount("Matkonto", 7000),
+                new BankAccount("Resa", 15000),
+                new BankAccount("Elektronik", 30000)
             };
 
             List<User> users = new List<User>
@@ -49,29 +61,28 @@ namespace Individuellt_projekt
                 }
             }
         }
+
         static void WelcomeMenu()
         {
             Console.Clear();
-            Console.WriteLine("\n===== CONSOLE-BANKEN =====" +
-                "\n\nHej och välkommen till Console-Banken, den enda banken du behöver i ditt liv!" +
-                "\n\nVänligen tryck ENTER för att forsätta...");
+            Console.WriteLine("\n===== CONSOLE-BANKEN =====");
+            RandomMessage();
+            Console.WriteLine("\nVänligen tryck ENTER för att forsätta...");
             Console.ReadLine();
         }
+
         static User LogIn(List<User> users)
         {
             try
             {
                 int loginAttempts = 3;
-                
-                
                 while (loginAttempts != 0)
                 {
                     Console.Clear();
                     Console.Write("\nAnvändarnamn: ");
                     string enterName = Console.ReadLine().ToUpper();
                     Console.Write("Pinkod: ");
-                    int enterPincode;
-                    if (int.TryParse(Console.ReadLine(), out enterPincode))
+                    if (int.TryParse(Console.ReadLine(), out int enterPincode))
                     {
                         User loggedInUser = users.FirstOrDefault(u => u.UserName == enterName && u.UserPinCode == enterPincode);
 
@@ -112,6 +123,7 @@ namespace Individuellt_projekt
             }
             return null;
         }
+
         static void MainMenu(User loggedInUser)
         {
             while (true)
@@ -124,27 +136,121 @@ namespace Individuellt_projekt
                     "\n[3] Ta ut pengar" +
                     "\n[4] Logga ut" +
                     "\n\nVÄLJ: ");
+
                 string userChoise = Console.ReadLine();
                 switch (userChoise)
                 {
                     case "1":
                         Console.Clear();
+                        foreach (var account in loggedInUser.Accounts)
+                        {
+                            Console.WriteLine($"\nKonto: {account.AccountName}\nSaldo: {account.AccountBalance:C}");
+                        }
+                        Console.WriteLine("\nVänligen tryck ENTER för att forsätta...");
+                        Console.ReadLine();
                         break;
                     case "2":
 
                         break;
                     case "3":
-
+                        Console.Clear();
+                        int accountNumber = 0;
+                        foreach (var account in loggedInUser.Accounts)
+                        {
+                            accountNumber++;
+                            Console.WriteLine($"\nKonto {accountNumber}: {account.AccountName}\nSaldo: {account.AccountBalance:C}");
+                        }
+                        Console.Write($"\n\nVilket konto vill du ta ut pengar från?\nVälj 1-{accountNumber}: ");
+                        if (int.TryParse(Console.ReadLine(), out int accountChoise))
+                        {
+                            if (accountChoise > accountNumber)
+                            {
+                                Console.WriteLine($"\nDu måste välja alternativ 1-{accountNumber}!");
+                                Thread.Sleep(2000);
+                            }
+                            switch (accountChoise)
+                            {
+                                case 1:
+                                    Withdraw(loggedInUser, 0);
+                                    break;
+                                case 2:
+                                    Withdraw(loggedInUser, 1);
+                                    break;
+                                case 3:
+                                    Withdraw(loggedInUser, 2);
+                                    break;
+                                case 4:
+                                    Withdraw(loggedInUser, 3);
+                                    break;
+                                case 5:
+                                    Withdraw(loggedInUser, 4);
+                                    break;
+                            }
+                        }
+                        else
+                        {
+                            Console.WriteLine($"\nDu kan inte skriva bokstäver, välj alternativ 1-{accountNumber}!");
+                            Thread.Sleep(2000);
+                        }
                         break;
+
                     case "4":
                         Console.Clear();
                         Console.WriteLine("\nDu loggas nu ut...");
                         Thread.Sleep(3000);
                         return;
+
                     default:
                         Console.WriteLine("\nDu måste välja alternativ 1-4!");
                         Thread.Sleep(2000);
                         break;
+                }
+            }
+        }
+
+        static void RandomMessage()
+        {
+            Random random = new Random();
+            string[] Messages = new string[] 
+            { "\nHej och välkommen till Console-Banken, den enda banken du behöver i ditt liv!",
+              "\nVarmt välkommen till Console-Banken, köp lågt, sälj högt!",
+              "\nVälkommen till Console-Banken, varje krona är den första till miljonen!" 
+            };
+
+            string randomMessage = Messages[random.Next(Messages.Length)];
+            Console.Write(randomMessage);
+        }
+
+        static void Withdraw(User user, int accountIndex)
+        {
+            Console.Clear();
+
+            if (accountIndex < user.Accounts.Count)
+            {
+                Console.Write($"\nHur mycket vill du ta från {user.Accounts[accountIndex].AccountName}?\nAnge: ");
+                if (double.TryParse(Console.ReadLine(), out double amount))
+                {
+                    if (amount <= 0) 
+                    {
+                        Console.WriteLine("Det måste vara större än 0!");
+                        Thread.Sleep(2000);
+                    }
+                    else if (amount > user.Accounts[accountIndex].AccountBalance)
+                    {
+                        Console.WriteLine("Du har inte tillräckligt med pengar på kontot!");
+                        Thread.Sleep(2000);
+                    }
+                    else
+                    {
+                        user.Accounts[accountIndex].AccountBalance -= amount;
+                        Console.WriteLine($"Du tog ut {amount:C} från kontot: {user.Accounts[accountIndex].AccountName}");
+                        Thread.Sleep(2000);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Du måste ange det i siffror!");
+                    Thread.Sleep(2000);
                 }
             }
         }

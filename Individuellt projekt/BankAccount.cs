@@ -8,5 +8,11 @@ namespace Individuellt_projekt
     {
         public string AccountName { get; set; }
         public double AccountBalance { get; set; }
+
+        public BankAccount(string accountName, double accountBalance) 
+        {
+            AccountName = accountName;
+            AccountBalance = accountBalance;
+        }
     }
 }
