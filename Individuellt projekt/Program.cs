@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading;
 using System.Threading.Channels;
 
@@ -149,12 +150,61 @@ namespace Individuellt_projekt
                         Console.WriteLine("\nVänligen tryck ENTER för att forsätta...");
                         Console.ReadLine();
                         break;
-                    case "2":
 
-                        break;
-                    case "3":
+                    case "2":
                         Console.Clear();
                         int accountNumber = 0;
+                        foreach (var account in loggedInUser.Accounts)
+                        {
+                            accountNumber++;
+                            Console.WriteLine($"\nKonto {accountNumber}: {account.AccountName}\nSaldo: {account.AccountBalance:C}");
+                        }
+                        if (accountNumber <= 1)
+                        {
+                            Console.WriteLine("\nDu måste ha minst två konton för denna funktionen!\nTar dig tillbaka...");
+                            Thread.Sleep(3000);
+                            break;
+                        }
+                        else
+                        {
+                            Console.Write($"\n\nVilket konto vill du föra över pengar från?\nVälj 1-{accountNumber}: ");
+                            if (int.TryParse(Console.ReadLine(), out int accountChoiseFrom))
+                            {
+                                if (accountChoiseFrom > accountNumber)
+                                {
+                                    Console.WriteLine($"\nDu måste välja alternativ 1-{accountNumber}!");
+                                    Thread.Sleep(2000);
+                                    break;
+                                }
+                                Console.Write($"\nVilket konto vill du föra över pengar till?\nVälj 1-{accountNumber}: ");
+                                if (int.TryParse(Console.ReadLine(), out int accountChoiseTo))
+                                {
+                                    if (accountChoiseTo > accountNumber)
+                                    {
+                                        Console.WriteLine($"\nDu måste välja alternativ 1-{accountNumber}!");
+                                        Thread.Sleep(2000);
+                                        break;
+                                    }
+                                    else if (accountChoiseTo == accountChoiseFrom)
+                                    {
+                                        Console.WriteLine("\nDu kan inte föra över pengar mellan samma konto, du måste välja två olika!");
+                                        Thread.Sleep(2000);
+                                        break;
+                                    }
+                                }
+                                Transfer(loggedInUser, accountChoiseFrom - 1, accountChoiseTo - 1);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"\nDu kan inte skriva bokstäver, välj alternativ 1-{accountNumber}!");
+                                Thread.Sleep(2000);
+                            }
+                            break;
+                        }
+
+                    case "3":
+                        Console.Clear();
+                        accountNumber = 0;
                         foreach (var account in loggedInUser.Accounts)
                         {
                             accountNumber++;
@@ -168,24 +218,7 @@ namespace Individuellt_projekt
                                 Console.WriteLine($"\nDu måste välja alternativ 1-{accountNumber}!");
                                 Thread.Sleep(2000);
                             }
-                            switch (accountChoise)
-                            {
-                                case 1:
-                                    Withdraw(loggedInUser, 0);
-                                    break;
-                                case 2:
-                                    Withdraw(loggedInUser, 1);
-                                    break;
-                                case 3:
-                                    Withdraw(loggedInUser, 2);
-                                    break;
-                                case 4:
-                                    Withdraw(loggedInUser, 3);
-                                    break;
-                                case 5:
-                                    Withdraw(loggedInUser, 4);
-                                    break;
-                            }
+                            Withdraw(loggedInUser, accountChoise-1);
                         }
                         else
                         {
@@ -211,10 +244,10 @@ namespace Individuellt_projekt
         static void RandomMessage()
         {
             Random random = new Random();
-            string[] Messages = new string[] 
+            string[] Messages = new string[]
             { "\nHej och välkommen till Console-Banken, den enda banken du behöver i ditt liv!",
               "\nVarmt välkommen till Console-Banken, köp lågt, sälj högt!",
-              "\nVälkommen till Console-Banken, varje krona är den första till miljonen!" 
+              "\nVälkommen till Console-Banken, varje krona är den första till miljonen!"
             };
 
             string randomMessage = Messages[random.Next(Messages.Length)];
@@ -230,7 +263,7 @@ namespace Individuellt_projekt
                 Console.Write($"\nHur mycket vill du ta från {user.Accounts[accountIndex].AccountName}?\nAnge: ");
                 if (double.TryParse(Console.ReadLine(), out double amount))
                 {
-                    if (amount <= 0) 
+                    if (amount <= 0)
                     {
                         Console.WriteLine("Det måste vara större än 0!");
                         Thread.Sleep(2000);
@@ -244,7 +277,41 @@ namespace Individuellt_projekt
                     {
                         user.Accounts[accountIndex].AccountBalance -= amount;
                         Console.WriteLine($"Du tog ut {amount:C} från kontot: {user.Accounts[accountIndex].AccountName}");
+                        Thread.Sleep(3000);
+                    }
+                }
+                else
+                {
+                    Console.WriteLine("Du måste ange det i siffror!");
+                    Thread.Sleep(2000);
+                }
+            }
+        }
+        static void Transfer(User user, int accountIndexFrom, int accountIndexTo)
+        {
+            Console.Clear();
+
+            if (accountIndexFrom < user.Accounts.Count)
+            {
+                Console.Write($"\nHur mycket vill du föra över från {user.Accounts[accountIndexFrom].AccountName} till {user.Accounts[accountIndexTo].AccountName}?\nAnge: ");
+                if (double.TryParse(Console.ReadLine(), out double amount))
+                {
+                    if (amount <= 0)
+                    {
+                        Console.WriteLine("Det måste vara större än 0!");
                         Thread.Sleep(2000);
+                    }
+                    else if (amount > user.Accounts[accountIndexFrom].AccountBalance)
+                    {
+                        Console.WriteLine("Du har inte tillräckligt med pengar på kontot!");
+                        Thread.Sleep(2000);
+                    }
+                    else
+                    {
+                        user.Accounts[accountIndexFrom].AccountBalance -= amount;
+                        user.Accounts[accountIndexTo].AccountBalance += amount;
+                        Console.WriteLine($"Du förde över {amount:C} från kontot: {user.Accounts[accountIndexFrom].AccountName} till kontot: {user.Accounts[accountIndexTo].AccountName}");
+                        Thread.Sleep(3000);
                     }
                 }
                 else
