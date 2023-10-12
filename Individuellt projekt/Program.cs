@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Channels;
 
 namespace Individuellt_projekt
 {// ===== Eddie Halling SUT23 =====
@@ -12,40 +9,40 @@ namespace Individuellt_projekt
     {
         static void Main(string[] args)
         {
-            List<BankAccount> AlphaAccounts = new List<BankAccount>
+            List<BankAccount> AlphaAccounts = new List<BankAccount> //Lista med konton som tillhör användaren "Alpha"
             {
-                new BankAccount("Lönekonto", 20157)
+                new BankAccount("Lönekonto", 20157) //Skapar nytt objekt från BankAccount-klassen
             };
-            List<BankAccount> BravoAccounts = new List<BankAccount>
+            List<BankAccount> BravoAccounts = new List<BankAccount> //Lista med konton som tillhör användaren "Bravo"
             {
-                new BankAccount("Lönekonto", 14537),
+                new BankAccount("Lönekonto", 14537), //Skapar nya objekt från BankAccount-klassen
                 new BankAccount("Sparkonto", 10000),
             };
-            List<BankAccount> CharlieAccounts = new List<BankAccount>
+            List<BankAccount> CharlieAccounts = new List<BankAccount> //Lista med konton som tillhör användaren "Charlie"
             {
-                new BankAccount("Lönekonto", 25600),
+                new BankAccount("Lönekonto", 25600), //Skapar nya objekt från BankAccount-klassen
                 new BankAccount("Sparkonto", 20000),
                 new BankAccount("Matkonto", 3000)
             };
-            List<BankAccount> DeltaAccounts = new List<BankAccount>
+            List<BankAccount> DeltaAccounts = new List<BankAccount> //Lista med konton som tillhör användaren "Delta"
             {
-                new BankAccount("Lönekonto", 32881),
+                new BankAccount("Lönekonto", 32881), //Skapar nya objekt från BankAccount-klassen
                 new BankAccount("Sparkonto", 30000),
                 new BankAccount("Matkonto", 4000),
                 new BankAccount("Resa", 10000)
             };
-            List<BankAccount> EchoAccounts = new List<BankAccount>
+            List<BankAccount> EchoAccounts = new List<BankAccount> //Lista med konton som tillhör användaren "Echo"
             {
-                new BankAccount("Lönekonto", 58923),
+                new BankAccount("Lönekonto", 58923), //Skapar nya objekt från BankAccount-klassen
                 new BankAccount("Sparkonto", 60000),
                 new BankAccount("Matkonto", 7000),
                 new BankAccount("Resa", 15000),
                 new BankAccount("Elektronik", 30000)
             };
 
-            List<User> users = new List<User>
+            List<User> users = new List<User> //Lista med användare
             {
-                new User("Alpha", 1111, AlphaAccounts),
+                new User("Alpha", 1111, AlphaAccounts), //Skapar nya objekt från User-klassen
                 new User("Bravo", 2222, BravoAccounts),
                 new User("Charlie", 3333, CharlieAccounts),
                 new User("Delta", 4444, DeltaAccounts),
@@ -54,77 +51,78 @@ namespace Individuellt_projekt
 
             while (true)
             {
-                WelcomeMenu();
-                User loggedInUser = LogIn(users);
-                if (loggedInUser != null)
+                WelcomeMenu(); //Kör metoden WelcomeMenu
+                User loggedInUser = LogIn(users); //Deklarerar en variabel av datatypen User som kallar på LogIn metoden och tar emot lista med användare, returnerar sedan en inloggad användare som tilldelas till loggedInUser
+                if (loggedInUser != null) //Om loggedInUser tilldelats en användare så körs MainMenu metoden som tar emot användaren
                 {
                     MainMenu(loggedInUser);
                 }
             }
         }
 
+        /* === WelcomeMenu metod === 
+        Det första användaren ser när programmet startar och hälsar användaren välkommen. */
         static void WelcomeMenu()
         {
             Console.Clear();
             Console.WriteLine("\n===== CONSOLE-BANKEN =====");
-            RandomMessage();
+            RandomMessage(); //Skriver ut ett slumpmässigt välkomstmeddelande
             Console.WriteLine("\nVänligen tryck ENTER för att forsätta...");
             Console.ReadLine();
         }
 
+        /* === LogIn metod ===
+        Metod för att användarna ska kunna logga in på sin egna sida i banken, kontrollerar att användarnamn och pinkod stämmer överrens.
+        Om användare lyckas logga in så returnerar metoden den inloggade användaren. Misslyckas man logga in 3 gånger så stängs programmet. */
         static User LogIn(List<User> users)
         {
-            try
+            int loginAttempts = 3; //Hur många försök användaren har att försöka logga in
+            while (loginAttempts != 0) //While-loop som körs så länge försöken som är kvar inte är noll
             {
-                int loginAttempts = 3;
-                while (loginAttempts != 0)
+                Console.Clear();
+                Console.Write("\nAnvändarnamn: ");
+                string enterName = Console.ReadLine().ToUpper();
+                Console.Write("Pinkod: ");
+                if (int.TryParse(Console.ReadLine(), out int enterPincode))
                 {
-                    Console.Clear();
-                    Console.Write("\nAnvändarnamn: ");
-                    string enterName = Console.ReadLine().ToUpper();
-                    Console.Write("Pinkod: ");
-                    if (int.TryParse(Console.ReadLine(), out int enterPincode))
-                    {
-                        User loggedInUser = users.FirstOrDefault(u => u.UserName == enterName && u.UserPinCode == enterPincode);
+                    //Med hjälp av FirstOrDefualt och lambda-uttryck så söker den igenom listan av användare och ser om den hittar matchning med inmatat användar namn och pinkod,
+                    //returnerar sedan en inloggad användare som tilldelas till loggedInUser.
+                    User loggedInUser = users.FirstOrDefault(u => u.UserName == enterName && u.UserPinCode == enterPincode);
 
-                        if (loggedInUser != null)
-                        {
-                            Console.Clear();
-                            Console.WriteLine($"\nInloggningen lyckades, varmt välkommen {loggedInUser.UserName.ToUpper()}!" +
-                                $"\nVänligen vänta medan jag hämtar dina konton...");
-                            Thread.Sleep(3000);
-                            return loggedInUser;
-                        }
-                        else
-                        {
-                            loginAttempts--;
-                            Console.WriteLine($"\nOjdå... Inloggningen misslyckades. Fel användarnamn eller pinkod.\nDu har {loginAttempts} försök kvar!\nTryck ENTER för att fortsätta");
-                            Console.ReadLine();
-                        }
-                    }
-                    else
+                    if (loggedInUser != null) //Om loggedInUser tilldelats en användare
                     {
-                        loginAttempts--;
-                        Console.WriteLine($"\nOjdå... Inloggningen misslyckades. Pinkod kan bara vara siffror.\nDu har {loginAttempts} försök kvar!\nTryck ENTER för att fortsätta");
+                        Console.Clear();
+                        Console.WriteLine($"\nInloggningen lyckades, varmt välkommen {loggedInUser.UserName.ToUpper()}!" +
+                            $"\nVänligen vänta medan jag hämtar dina konton...");
+                        Thread.Sleep(3000);
+                        return loggedInUser; //Returnerar den inloggade användaren
+                    }
+                    else //Om användaren skriver in fel användarnamn eller pinkod
+                    {
+                        loginAttempts--; //Tar bort ett inloggningsförsök
+                        Console.WriteLine($"\nOjdå... Inloggningen misslyckades. Fel användarnamn eller pinkod.\nDu har {loginAttempts} försök kvar!\nTryck ENTER för att fortsätta");
                         Console.ReadLine();
                     }
                 }
-                if (loginAttempts == 0)
+                else //Om användaren skriver in bokstäver i pinkoden
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("Försök är slut! Programmet stängs ner...");
-                    Thread.Sleep(3000);
-                    Environment.Exit(0);
+                    loginAttempts--; //Tar bort ett inloggningsförsök
+                    Console.WriteLine($"\nOjdå... Inloggningen misslyckades. Pinkod kan bara vara siffror.\nDu har {loginAttempts} försök kvar!\nTryck ENTER för att fortsätta");
+                    Console.ReadLine();
                 }
             }
-            catch (Exception e)
+            if (loginAttempts == 0) //Om inloggningsförsöken är slut
             {
-                Console.WriteLine(e.Message);
-                Console.ReadLine();
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("Försök är slut! Programmet stängs ner...");
+                Thread.Sleep(3000);
+                Environment.Exit(0); //Stänger av programmet
             }
             return null;
         }
 
+        /* === MainMenu metod === 
+        Menyn användaren ser när den loggat in på sin sida, där den kan göra fyra olika val. */
         static void MainMenu(User loggedInUser)
         {
             while (true)
@@ -141,6 +139,7 @@ namespace Individuellt_projekt
                 string userChoise = Console.ReadLine();
                 switch (userChoise)
                 {
+                    //Skriver ut kontonamn och saldon för konton.
                     case "1":
                         Console.Clear();
                         foreach (var account in loggedInUser.Accounts)
@@ -151,6 +150,8 @@ namespace Individuellt_projekt
                         Console.ReadLine();
                         break;
 
+                    //Skriver ut kontonamn och saldon för konton, där användaren först väljer vilket konto pengar ska tas ifrån och sen vilket konto pengar ska gå till.
+                    //Måste finnas två konton hos användaren för att använda denna funktion.
                     case "2":
                         Console.Clear();
                         int accountNumber = 0;
@@ -191,8 +192,14 @@ namespace Individuellt_projekt
                                         Thread.Sleep(2000);
                                         break;
                                     }
+                                    Transfer(loggedInUser, accountChoiseFrom - 1, accountChoiseTo - 1); //Kör transfer metoden
                                 }
-                                Transfer(loggedInUser, accountChoiseFrom - 1, accountChoiseTo - 1);
+                                else
+                                {
+                                    Console.WriteLine($"\nDu kan inte skriva bokstäver, välj alternativ 1-{accountNumber}!");
+                                    Thread.Sleep(2000);
+                                }
+                                break;
                             }
                             else
                             {
@@ -202,6 +209,7 @@ namespace Individuellt_projekt
                             break;
                         }
 
+                    //Skriver ut kontonamn och saldon för konton, där användaren får välja vilket konto den vill ta ut pengar från.
                     case "3":
                         Console.Clear();
                         accountNumber = 0;
@@ -227,12 +235,14 @@ namespace Individuellt_projekt
                         }
                         break;
 
+                    //Loggar ut användaren och återgår till WelcomeMenu
                     case "4":
                         Console.Clear();
                         Console.WriteLine("\nDu loggas nu ut...");
                         Thread.Sleep(3000);
                         return;
 
+                    //Felhantering om användare försöker välja något annat än siffra 1-4
                     default:
                         Console.WriteLine("\nDu måste välja alternativ 1-4!");
                         Thread.Sleep(2000);
@@ -241,6 +251,8 @@ namespace Individuellt_projekt
             }
         }
 
+        /* === RandomMessage metod === 
+        Väljer ett av tre meddelanden att skriva ut i WelcomeMenu när programmet startar eller återgår till WelcomeMenu efter utloggning. */
         static void RandomMessage()
         {
             Random random = new Random();
@@ -254,6 +266,8 @@ namespace Individuellt_projekt
             Console.Write(randomMessage);
         }
 
+        /* === Withdraw metod === 
+        Metod för att ta ut pengar från konton. */
         static void Withdraw(User user, int accountIndex)
         {
             Console.Clear();
@@ -287,6 +301,9 @@ namespace Individuellt_projekt
                 }
             }
         }
+
+        /* === Transfer metod === 
+        Metod för att ta föra över pengar mellan konton.*/
         static void Transfer(User user, int accountIndexFrom, int accountIndexTo)
         {
             Console.Clear();
